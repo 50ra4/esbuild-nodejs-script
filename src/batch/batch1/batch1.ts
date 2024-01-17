@@ -1,7 +1,9 @@
-import { logger } from '@/utils/logger.ts';
+import { logger } from "@/utils/logger.ts";
+import { readdirSync } from "node:fs";
 
 function main() {
-    logger('batch1');
-};
+  const files = readdirSync(".");
+  logger("batch1", files);
+}
 
 main();
