@@ -1,8 +1,7 @@
-import { logger } from '@/utils/logger.ts';
+import { logger } from "@/utils/logger";
 
 function main() {
-    logger('batch2');
-};
-
+  logger("batch2");
+}
 
 main();

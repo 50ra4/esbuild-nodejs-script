@@ -1,5 +1,5 @@
 import axios from "axios";
-import encoding from "encoding-japanese";
+import { codeToString, convert } from "encoding-japanese";
 import { existsSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 
@@ -12,7 +12,7 @@ export const downloadHolidayCsv = async (outputFileName: string) => {
     responseType: "arraybuffer",
     transformResponse: (data) =>
       // SJISからUNICODEへ変換
-      encoding.codeToString(encoding.convert(data, "UNICODE", "SJIS")),
+      codeToString(convert(data, "UNICODE", "SJIS")),
   }).then(({ data }) => data);
 
   if (!existsSync(dirname(outputFileName))) {

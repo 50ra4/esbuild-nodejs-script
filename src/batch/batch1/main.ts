@@ -1,8 +1,8 @@
-import { logger } from "@/utils/logger.ts";
+import { logger } from "@/utils/logger";
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
-import { downloadHolidayCsv } from "./downloadHolidayCsv.ts";
-import { readHolidayCsv } from "./readHolidayCsv.ts";
+import { downloadHolidayCsv } from "./downloadHolidayCsv";
+import { readHolidayCsv } from "./readHolidayCsv";
 
 export const doBatch1 = async () => {
   const csvOutputDir = join(import.meta.dirname, "__temp");

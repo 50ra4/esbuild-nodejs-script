@@ -1,4 +1,4 @@
-import { doBatch1 } from "./main.ts";
+import { doBatch1 } from "./main";
 
 export const handler = async () => {
   await doBatch1().catch((e) => {
