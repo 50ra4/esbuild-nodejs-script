@@ -1,9 +1,11 @@
-import { logger } from "@/utils/logger.ts";
-import { readdirSync } from "node:fs";
+import { doBatch1 } from "./main.ts";
 
-function main() {
-  const files = readdirSync(".");
-  logger("batch1", files);
-}
+export const handler = async () => {
+  await doBatch1().catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
+};
 
-main();
+// TODO: for script test
+await handler();
