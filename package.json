@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "rm -rf dist && node --loader ts-node/esm src/build.ts",
-    "check-type": "tsc --noEmit"
+    "check-type": "tsc --noEmit",
+    "do:batch1": "npm run check-type && npm run build && node dist/batch1/index.js"
   },
   "devDependencies": {
     "@types/encoding-japanese": "2.0.5",
