@@ -1,6 +1,6 @@
-import { BuildOptions, build } from "esbuild";
-import { join, resolve } from "node:path";
-import { readdirSync } from "node:fs";
+import { type BuildOptions, build } from 'esbuild';
+import { join, resolve } from 'node:path';
+import { readdirSync } from 'node:fs';
 
 /**
  * commonjs用ライブラリをESMプロジェクトでbundleする際に生じることのある問題への対策
@@ -15,45 +15,46 @@ const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 `
   .trim()
-  .split("\n")
-  .join("");
+  .split('\n')
+  .join('');
 
 const OPTIONS: BuildOptions = {
   bundle: true,
   splitting: false,
   minify: true,
   keepNames: true,
-  sourcemap: "inline",
-  platform: "node",
-  format: "esm",
+  sourcemap: 'inline',
+  platform: 'node',
+  format: 'esm',
   outExtension: {
     // package.jsonの出力が不要になるため、拡張子を.mjsに
-    ".js": ".mjs",
+    '.js': '.mjs',
   },
   banner: {
     js: bannerJs,
   },
-  alias: { "@": "src" },
+  alias: { '@': 'src' },
   external: [],
   // tsconfig: "tsconfig.json", // tsconfig.jsonを利用する場合は明示不要
 };
 
 const main = async () => {
-  const entryDir = resolve(import.meta.dirname, "./batch");
+  const entryDir = resolve(import.meta.dirname, './batch');
   const targets = readdirSync(entryDir).map((name: string) => ({
     path: join(entryDir, name),
     name,
   }));
   const entryPoints = Object.fromEntries(
     targets.map(
-      (target) => [target.name, join(target.path, `${target.name}.ts`)] as const
-    )
+      (target) =>
+        [target.name, join(target.path, `${target.name}.ts`)] as const,
+    ),
   );
 
   return await build({
     ...OPTIONS,
     outdir: `dist`,
-    entryNames: "[dir]/[name]/index",
+    entryNames: '[dir]/[name]/index',
     entryPoints,
   });
 };

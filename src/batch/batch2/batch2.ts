@@ -1,7 +1,7 @@
-import { logger } from "@/utils/logger";
+import { logger } from '@/utils/logger';
 
-function main() {
-  logger("batch2");
-}
+export const handler = (): void => {
+  logger('batch2');
+};
 
-main();
+handler();
