@@ -2,6 +2,22 @@ import { BuildOptions, build } from "esbuild";
 import { join, resolve } from "node:path";
 import { readdirSync } from "node:fs";
 
+/**
+ * commonjs用ライブラリをESMプロジェクトでbundleする際に生じることのある問題への対策
+ * @see https://zenn.dev/junkor/articles/2bcd22ca08d21d#esbuild%E3%81%AE%E3%83%93%E3%83%AB%E3%83%89%E3%82%AA%E3%83%97%E3%82%B7%E3%83%A7%E3%83%B3
+ */
+const bannerJs = `
+import { createRequire } from "module";
+import url from "url";
+
+const require = createRequire(import.meta.url);
+const __filename = url.fileURLToPath(import.meta.url);
+const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
+`
+  .trim()
+  .split("\n")
+  .join(" ");
+
 const OPTIONS: BuildOptions = {
   bundle: true,
   splitting: false,
@@ -10,7 +26,10 @@ const OPTIONS: BuildOptions = {
   sourcemap: "inline",
   platform: "node",
   format: "esm",
-  tsconfig: "tsconfig.json",
+  // tsconfig: "tsconfig.json",
+  banner: {
+    js: bannerJs,
+  },
   alias: { "@": "src" },
   external: [],
 };
