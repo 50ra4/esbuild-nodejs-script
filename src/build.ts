@@ -16,7 +16,7 @@ const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 `
   .trim()
   .split("\n")
-  .join(" ");
+  .join("");
 
 const OPTIONS: BuildOptions = {
   bundle: true,
@@ -26,12 +26,16 @@ const OPTIONS: BuildOptions = {
   sourcemap: "inline",
   platform: "node",
   format: "esm",
-  // tsconfig: "tsconfig.json",
+  outExtension: {
+    // package.jsonの出力が不要になるため、拡張子を.mjsに
+    ".js": ".mjs",
+  },
   banner: {
     js: bannerJs,
   },
   alias: { "@": "src" },
   external: [],
+  // tsconfig: "tsconfig.json", // tsconfig.jsonを利用する場合は明示不要
 };
 
 const main = async () => {
