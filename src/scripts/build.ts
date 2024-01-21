@@ -38,22 +38,54 @@ const OPTIONS: BuildOptions = {
   // tsconfig: "tsconfig.json", // tsconfig.jsonを利用する場合は明示不要
 };
 
-const main = async () => {
-  const isTargetFeatures = process.env.BUILD_TARGET === 'features';
+type BuildTarget = NonNullable<typeof process.env.BUILD_TARGET>;
 
-  const entryDir = resolve(
-    import.meta.dirname,
-    isTargetFeatures ? '../features' : '../functions',
-  );
+const config = {
+  features: {
+    entryDir: resolve(import.meta.dirname, '../features'),
+    toTarget: (entryDirname: string, fileName: string) => ({
+      name: fileName,
+      path: join(entryDirname, fileName, 'index.ts'),
+    }),
+    outputDir: 'dist/features',
+  },
+  functions: {
+    entryDir: resolve(import.meta.dirname, '../functions'),
+    toTarget: (entryDirname: string, fileName: string) => ({
+      name: parse(fileName).name,
+      path: join(entryDirname, fileName),
+    }),
+    outputDir: 'dist/functions',
+  },
+  scripts: {
+    entryDir: resolve(import.meta.dirname, '../scripts'),
+    toTarget: (entryDirname: string, fileName: string) => ({
+      name: parse(fileName).name,
+      path: join(entryDirname, fileName),
+    }),
+    outputDir: 'dist/scripts',
+  },
+  'tools/functions': {
+    entryDir: resolve(import.meta.dirname, '../tools/functions'),
+    toTarget: (entryDirname: string, fileName: string) => ({
+      name: parse(fileName).name,
+      path: join(entryDirname, fileName),
+    }),
+    outputDir: 'dist/tools/functions',
+  },
+} satisfies Record<BuildTarget, Record<PropertyKey, unknown>>;
+
+const isTypeScriptFile = (path: string) =>
+  statSync(path).isFile() && /.ts$/.test(path);
+
+const main = async () => {
+  // TODO: pathを受け取り、ディレクトリで処理を分けるように修正する
+  const { entryDir, toTarget, outputDir } =
+    config[process.env.BUILD_TARGET ?? 'functions'];
 
   const targets = readdirSync(entryDir)
-    .map((name) => ({
-      name: isTargetFeatures ? name : parse(name).name,
-      path: isTargetFeatures
-        ? join(entryDir, name, 'index.ts')
-        : join(entryDir, name),
-    }))
-    .filter(({ path }) => statSync(path).isFile() && /.ts$/.test(path));
+    .map((fileName) => toTarget(entryDir, fileName))
+    .filter(({ path }) => isTypeScriptFile(path));
 
   const entryPoints = Object.fromEntries(
     targets.map(({ name, path }) => [name, path] as const),
@@ -61,8 +93,8 @@ const main = async () => {
 
   return await build({
     ...OPTIONS,
-    // FIXME: ディレクトリ構成を保ってoutputする
-    outdir: isTargetFeatures ? 'dist/features' : 'dist',
+    // FIXME: ディレクトリ構成を保ってoutputする？
+    outdir: outputDir,
     entryNames: '[dir]/[name]/index',
     entryPoints,
   });
