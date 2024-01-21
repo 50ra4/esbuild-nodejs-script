@@ -5,6 +5,10 @@ import {
 } from '@aws-sdk/client-codecommit';
 import { fetchCodeCommitFilePathsRecursively } from './fetchCodeCommitFilePathsRecursively';
 import { isNonNullable } from '@/utils/typeGuard';
+import * as archiver from 'archiver';
+import { createWriteStream } from 'node:fs';
+import { join } from 'node:path';
+import { Buffer } from 'node:buffer';
 
 export const deployToLambda = async () => {
   // TODO: 環境変数などで変えられるようにする
@@ -35,13 +39,13 @@ export const deployToLambda = async () => {
             folderPath,
             repositoryName,
           });
-          return { name: 'TODO: function-name', filePaths };
+          return { functionName: 'TODO: function-name', filePaths };
         }),
     );
 
-    for (const { name, filePaths } of targetFunctions) {
+    for (const { functionName, filePaths } of targetFunctions) {
       // function-name（フォルダ）ごとにファイルの一覧を取得する
-      const results = await Promise.all(
+      const files = await Promise.all(
         filePaths.map((filePath) =>
           codeCommitClient.send(
             new GetFileCommand({ repositoryName, filePath }),
@@ -49,11 +53,36 @@ export const deployToLambda = async () => {
         ),
       );
 
-      // TODO: 後で消す
+      // TODO: 不要であれば、後で消す
       console.log(
-        `[${name}] fetched files`,
-        results.map((v) => v.filePath),
+        `[${functionName}] fetched files`,
+        files.map((v) => v.filePath),
       );
+
+      // 取得したファイルをzipに固める
+      const archive = archiver('zip', { zlib: { level: 9 } });
+      const zipFilePath = join(__dirname, 'tmp', `${functionName}.zip`);
+      archive.pipe(
+        createWriteStream(zipFilePath).on('close', () => {
+          console.log(`created ${zipFilePath}`);
+        }),
+      );
+
+      files
+        .map(({ fileContent, filePath }) =>
+          !fileContent || !filePath ? null : { fileContent, filePath },
+        )
+        .filter(isNonNullable)
+        .forEach(({ fileContent, filePath }) => {
+          archive.append(Buffer.from(fileContent), {
+            name: join(__dirname, filePath),
+          });
+        });
+
+      await archive.finalize();
+
+      // TODO: 不要であれば、後で消す
+      console.log(`[${functionName}] archive success.`);
     }
 
     console.log('succeeded deployToLambda.', targetFunctions);
