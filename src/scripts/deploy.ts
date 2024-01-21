@@ -8,8 +8,15 @@ const main = async () => {
   const repositoryName = 'deploy-to-lambda-test';
   const rootFolderPath = 'edge/functions';
 
-  const codeCommitClient = new CodeCommitClient({ region });
-  const lambdaClient = new LambdaClient({ region });
+  // TODO: デフォルトで設定されていそう？
+  const credentials = {
+    accessKeyId: process.env.ACCESS_KEY_ID ?? 'UNKNOWN',
+    secretAccessKey: process.env.SECRET_ACCESS_KEY_ID ?? 'UNKNOWN',
+  };
+
+  // TODO: クライアントを返却するファイル作成する？
+  const codeCommitClient = new CodeCommitClient({ region, credentials });
+  const lambdaClient = new LambdaClient({ region, credentials });
 
   return deployToLambda({
     repositoryName,
