@@ -6,15 +6,21 @@ import {
 import { fetchCodeCommitFilePathsRecursively } from './fetchCodeCommitFilePathsRecursively';
 import { isNonNullable } from '@/utils/typeGuard';
 import * as archiver from 'archiver';
-import { createWriteStream } from 'node:fs';
+import { createWriteStream, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Buffer } from 'node:buffer';
+import {
+  LambdaClient,
+  UpdateFunctionCodeCommand,
+} from '@aws-sdk/client-lambda';
 
 export const deployToLambda = async () => {
   // TODO: 環境変数などで変えられるようにする
   const repositoryName = 'deploy-to-lambda-test';
   const rootFolderPath = 'edge/functions';
-  const codeCommitClient = new CodeCommitClient({ region: 'ap-northeast-1' });
+  const region = 'ap-northeast-1';
+  const codeCommitClient = new CodeCommitClient({ region });
+  const lambdaClient = new LambdaClient({ region });
 
   try {
     // 直下からfunctionsのフォルダ一覧を取得する
@@ -83,6 +89,17 @@ export const deployToLambda = async () => {
 
       // TODO: 不要であれば、後で消す
       console.log(`[${functionName}] archive success.`);
+
+      // zipに固めたファイルをlambdaにuploadする
+      const result = await lambdaClient.send(
+        new UpdateFunctionCodeCommand({
+          FunctionName: functionName,
+          ZipFile: readFileSync(zipFilePath),
+        }),
+      );
+
+      // TODO: 不要であれば、後で消す
+      console.log(`[${functionName}] upload success.`, result);
     }
 
     console.log('succeeded deployToLambda.', targetFunctions);
