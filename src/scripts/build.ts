@@ -38,53 +38,34 @@ const OPTIONS: BuildOptions = {
   // tsconfig: "tsconfig.json", // tsconfig.jsonを利用する場合は明示不要
 };
 
-type BuildTarget = NonNullable<typeof process.env.BUILD_TARGET>;
-
-const config = {
-  features: {
-    entryDir: resolve(import.meta.dirname, '../features'),
-    toTarget: (entryDirname: string, fileName: string) => ({
-      name: fileName,
-      path: join(entryDirname, fileName, 'index.ts'),
-    }),
-    outputDir: 'dist/features',
-  },
-  functions: {
-    entryDir: resolve(import.meta.dirname, '../functions'),
-    toTarget: (entryDirname: string, fileName: string) => ({
-      name: parse(fileName).name,
-      path: join(entryDirname, fileName),
-    }),
-    outputDir: 'dist/functions',
-  },
-  scripts: {
-    entryDir: resolve(import.meta.dirname, '../scripts'),
-    toTarget: (entryDirname: string, fileName: string) => ({
-      name: parse(fileName).name,
-      path: join(entryDirname, fileName),
-    }),
-    outputDir: 'dist/scripts',
-  },
-  'tools/functions': {
-    entryDir: resolve(import.meta.dirname, '../tools/functions'),
-    toTarget: (entryDirname: string, fileName: string) => ({
-      name: parse(fileName).name,
-      path: join(entryDirname, fileName),
-    }),
-    outputDir: 'dist/tools/functions',
-  },
-} satisfies Record<BuildTarget, Record<PropertyKey, unknown>>;
-
 const isTypeScriptFile = (path: string) =>
   statSync(path).isFile() && /.ts$/.test(path);
 
 const main = async () => {
-  // TODO: pathを受け取り、ディレクトリで処理を分けるように修正する
-  const { entryDir, toTarget, outputDir } =
-    config[process.env.BUILD_TARGET ?? 'functions'];
+  const targetPath = process.env.BUILD_PATH;
+
+  if (!targetPath) {
+    throw new Error('process.env.BUILD_PATH is required.');
+  }
+
+  const srcDir = resolve(import.meta.dirname, '..');
+  const srcDirectories = readdirSync(srcDir).filter((name) =>
+    statSync(join(srcDir, name)).isDirectory(),
+  );
+
+  if (!srcDirectories.find((dir) => targetPath.startsWith(`/${dir}`))) {
+    throw new Error(
+      'Only the directory under src can be set to process.env.BUILD_PATH.',
+    );
+  }
+
+  const entryDir = join(srcDir, targetPath);
 
   const targets = readdirSync(entryDir)
-    .map((fileName) => toTarget(entryDir, fileName))
+    .map((fileName) => ({
+      name: parse(fileName).name,
+      path: join(entryDir, fileName),
+    }))
     .filter(({ path }) => isTypeScriptFile(path));
 
   const entryPoints = Object.fromEntries(
@@ -94,7 +75,7 @@ const main = async () => {
   return await build({
     ...OPTIONS,
     // FIXME: ディレクトリ構成を保ってoutputする？
-    outdir: outputDir,
+    outdir: join('dist', targetPath),
     entryNames: '[dir]/[name]/index',
     entryPoints,
   });

@@ -27,6 +27,9 @@
   },
   "include": ["src"],
 
+  /* for archiver */
+  "esModuleInterop": true,
+
   /* ts-node esm */
   "ts-node": {
     "experimentalSpecifierResolution": "node",
