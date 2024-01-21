@@ -39,10 +39,20 @@ const OPTIONS: BuildOptions = {
 };
 
 const main = async () => {
-  const entryDir = resolve(import.meta.dirname, '../functions');
+  const isTargetFeatures = process.env.BUILD_TARGET === 'features';
+
+  const entryDir = resolve(
+    import.meta.dirname,
+    isTargetFeatures ? '../features' : '../functions',
+  );
 
   const targets = readdirSync(entryDir)
-    .map((name) => ({ name: parse(name).name, path: join(entryDir, name) }))
+    .map((name) => ({
+      name: isTargetFeatures ? name : parse(name).name,
+      path: isTargetFeatures
+        ? join(entryDir, name, 'index.ts')
+        : join(entryDir, name),
+    }))
     .filter(({ path }) => statSync(path).isFile() && /.ts$/.test(path));
 
   const entryPoints = Object.fromEntries(
@@ -51,7 +61,7 @@ const main = async () => {
 
   return await build({
     ...OPTIONS,
-    outdir: `dist`,
+    outdir: isTargetFeatures ? 'dist/features' : 'dist',
     entryNames: '[dir]/[name]/index',
     entryPoints,
   });
