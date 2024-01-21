@@ -22,8 +22,13 @@
     /* path */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
-    }
+      "@/*": ["src/*"],
+    },
   },
-  "include": ["src"]
+  "include": ["src"],
+  "ts-node": {
+    "experimentalSpecifierResolution": "node",
+    "transpileOnly": true,
+    "esm": true,
+  },
 }
