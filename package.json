@@ -5,16 +5,20 @@
   "type": "module",
   "scripts": {
     "prepare": "husky install",
-    "build": "rm -rf dist && node --loader ts-node/esm src/scripts/build.ts",
-    "build:features": "rm -rf dist && BUILD_TARGET=features node --loader ts-node/esm src/scripts/build.ts",
+    "build:functions": "rm -rf dist/functions && BUILD_PATH=/functions node --loader ts-node/esm src/scripts/build.ts",
+    "build:tools-functions": "rm -rf dist/tools/functions && BUILD_PATH=/tools/functions node --loader ts-node/esm src/scripts/build.ts",
+    "build:scripts": "rm -rf dist/scripts && BUILD_PATH=/scripts node --loader ts-node/esm src/scripts/build.ts",
+    "build": "rm -rf dist && npm run build:functions && npm run build:tools-functions && npm run build:scripts",
+    "deploy": "npm run build:scripts && node dist/deploy/index.mjs",
     "check-type": "tsc --noEmit",
     "lint:lint-staged": "lint-staged",
     "lint:prettier": "prettier --write 'src/**/*.{js,ts,tsx}'",
     "lint:eslint": "eslint --fix 'src/**/*.{js,ts,tsx}'",
     "lint": "npm run lint:prettier && npm run lint:eslint",
-    "do:batch1": "npm run check-type && npm run build:features && node dist/features/batch1/index.mjs"
+    "do:batch1": "npm run check-type && npm run build:scripts && node dist/scripts/batch1/index.mjs"
   },
   "devDependencies": {
+    "@types/archiver": "6.0.2",
     "@types/aws-lambda": "8.10.131",
     "@types/encoding-japanese": "2.0.5",
     "@types/node": "20.11.5",
@@ -33,6 +37,10 @@
     "typescript": "5.2.2"
   },
   "dependencies": {
+    "@aws-sdk/client-codecommit": "3.496.0",
+    "@aws-sdk/client-lambda": "3.496.0",
+    "@aws-sdk/client-s3": "3.496.0",
+    "archiver": "6.0.1",
     "axios": "1.6.5",
     "csv-parse": "5.5.3",
     "date-fns": "3.2.0",

@@ -1,4 +1,4 @@
-import { doBatch1 } from './batch1';
+import { doBatch1 } from '@/features/batch1/batch1';
 
 doBatch1()
   .then(() => {

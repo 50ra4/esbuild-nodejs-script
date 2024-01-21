@@ -38,22 +38,35 @@ const OPTIONS: BuildOptions = {
   // tsconfig: "tsconfig.json", // tsconfig.jsonを利用する場合は明示不要
 };
 
-const main = async () => {
-  const isTargetFeatures = process.env.BUILD_TARGET === 'features';
+const isTypeScriptFile = (path: string) =>
+  statSync(path).isFile() && /.ts$/.test(path);
 
-  const entryDir = resolve(
-    import.meta.dirname,
-    isTargetFeatures ? '../features' : '../functions',
+const main = async () => {
+  const targetPath = process.env.BUILD_PATH;
+
+  if (!targetPath) {
+    throw new Error('process.env.BUILD_PATH is required.');
+  }
+
+  const srcDir = resolve(import.meta.dirname, '..');
+  const srcDirectories = readdirSync(srcDir).filter((name) =>
+    statSync(join(srcDir, name)).isDirectory(),
   );
 
+  if (!srcDirectories.find((dir) => targetPath.startsWith(`/${dir}`))) {
+    throw new Error(
+      'Only the directory under src can be set to process.env.BUILD_PATH.',
+    );
+  }
+
+  const entryDir = join(srcDir, targetPath);
+
   const targets = readdirSync(entryDir)
-    .map((name) => ({
-      name: isTargetFeatures ? name : parse(name).name,
-      path: isTargetFeatures
-        ? join(entryDir, name, 'index.ts')
-        : join(entryDir, name),
+    .map((fileName) => ({
+      name: parse(fileName).name,
+      path: join(entryDir, fileName),
     }))
-    .filter(({ path }) => statSync(path).isFile() && /.ts$/.test(path));
+    .filter(({ path }) => isTypeScriptFile(path));
 
   const entryPoints = Object.fromEntries(
     targets.map(({ name, path }) => [name, path] as const),
@@ -61,7 +74,8 @@ const main = async () => {
 
   return await build({
     ...OPTIONS,
-    outdir: isTargetFeatures ? 'dist/features' : 'dist',
+    // FIXME: ディレクトリ構成を保ってoutputする？
+    outdir: join('dist', targetPath),
     entryNames: '[dir]/[name]/index',
     entryPoints,
   });

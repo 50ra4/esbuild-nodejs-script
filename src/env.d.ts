@@ -4,7 +4,7 @@ declare module 'process' {
       interface ProcessEnv {
         NODE_ENV?: string;
         /** for build options */
-        BUILD_TARGET?: 'features' | 'functions';
+        BUILD_PATH?: string;
         // ...
       }
     }
