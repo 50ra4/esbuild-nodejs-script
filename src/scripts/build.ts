@@ -61,6 +61,7 @@ const main = async () => {
 
   return await build({
     ...OPTIONS,
+    // FIXME: ディレクトリ構成を保ってoutputする
     outdir: isTargetFeatures ? 'dist/features' : 'dist',
     entryNames: '[dir]/[name]/index',
     entryPoints,
