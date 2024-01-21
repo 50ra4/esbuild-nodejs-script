@@ -14,13 +14,17 @@ import {
   UpdateFunctionCodeCommand,
 } from '@aws-sdk/client-lambda';
 
-export const deployToLambda = async ({ region }: { region: string }) => {
-  // TODO: 環境変数などで変えられるようにする
-  const repositoryName = 'deploy-to-lambda-test';
-  const rootFolderPath = 'edge/functions';
-  const codeCommitClient = new CodeCommitClient({ region });
-  const lambdaClient = new LambdaClient({ region });
-
+export const deployToLambda = async ({
+  repositoryName,
+  rootFolderPath,
+  codeCommitClient,
+  lambdaClient,
+}: {
+  repositoryName: string;
+  rootFolderPath: string;
+  codeCommitClient: CodeCommitClient;
+  lambdaClient: LambdaClient;
+}) => {
   // 直下からfunctionsのフォルダ一覧を取得する
   const { subFolders = [] } = await codeCommitClient.send(
     new GetFolderCommand({
